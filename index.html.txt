@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>采油一厂尕斯联合站HAZOP分析结果</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', 'Segoe UI', Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a5276 0%, #2e86c1 100%);
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eaeaea;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 10px;
+        }
+        
+        .stats-box {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-item {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2980b9;
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 30px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+        }
+        
+        th {
+            background-color: #2c3e50;
+            color: white;
+            font-weight: bold;
+            padding: 15px;
+            text-align: left;
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        tr:hover {
+            background-color: #f1f8ff;
+        }
+        
+        .risk-high {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            display: inline-block;
+        }
+        
+        .risk-medium {
+            background-color: #fff3e0;
+            color: #ef6c00;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            display: inline-block;
+        }
+        
+        .risk-low {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            display: inline-block;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #7f8c8d;
+            font-size: 14px;
+            border-top: 1px solid #eee;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .card {
+                padding: 15px;
+            }
+            
+            .chart-container {
+                height: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>采油一厂尕斯联合站HAZOP分析结果</h1>
+            <p class="subtitle">危险与可操作性分析结果可视化 - 基于14个节点分析</p>
+        </header>
+        
+        <div class="stats-box">
+            <div class="stat-item">
+                <div class="stat-label">总分析节点数</div>
+                <div class="stat-value">14</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">高风险节点</div>
+                <div class="stat-value">1</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">中风险节点</div>
+                <div class="stat-value">11</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">低风险节点</div>
+                <div class="stat-value">2</div>
+            </div>
+        </div>
+        
+        <div class="dashboard">
+            <div class="card">
+                <h2 class="card-title">风险等级分布</h2>
+                <div class="chart-container">
+                    <canvas id="riskPieChart"></canvas>
+                </div>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #FF6B6B;"></div>
+                        <span>高风险 (1个)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #FFD166;"></div>
+                        <span>中风险 (11个)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #06D6A0;"></div>
+                        <span>低风险 (2个)</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title">建议措施类型分布</h2>
+                <div class="chart-container">
+                    <canvas id="suggestionBarChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title">风险矩阵分析</h2>
+                <div class="chart-container">
+                    <canvas id="riskMatrixChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title">各节点风险等级占比</h2>
+                <div class="chart-container">
+                    <canvas id="riskStackedChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <h2 class="card-title" style="margin-bottom: 15px;">HAZOP分析结果详情</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th width="60">序号</th>
+                        <th width="200">偏差</th>
+                        <th width="100">风险等级</th>
+                        <th>建议措施类型</th>
+                        <th width="150">主要建议</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1-1</td>
+                        <td>G-1调储罐无流量</td>
+                        <td><span class="risk-low">低</span></td>
+                        <td>监测/报警</td>
+                        <td>增设流量检测与报警</td>
+                    </tr>
+                    <tr>
+                        <td>1-2</td>
+                        <td>调储罐G-1前方管道来流量过大</td>
+                        <td><span class="risk-medium">中</span></td>
+                        <td>联锁控制</td>
+                        <td>增设高流量联锁</td>
+                    </tr>
+                    <tr>
+                        <td>2-2</td>
+                        <td>调储罐G-1到预处理器Q-3中流量反向流动</td>
+                        <td><span class="risk-medium">中</span></td>
+                        <td>维护检查</td>
+                        <td>加强止回阀检查维护</td>
+                    </tr>
+                    <tr>
+                        <td>2-3</td>
+                        <td>污水未能从调储罐G-1输送至预处理器Q-3</td>
+                        <td><span class="risk-medium">中</span></td>
+                        <td>联锁控制</td>
+                        <td>增设低流量联锁</td>
+                    </tr>
+                    <tr>
+                        <td>3-1</td>
+                        <td>预处理器Q-3的出水未进入旋流分离器Q-2</td>
+                        <td><span class="risk-medium">中</span></td>
+                        <td>监测/报警</td>
+                        <td>增设流量监测</td>
+                    </tr>
+                    <tr>
+                        <td>3-2</td>
+                        <td>进入旋流分离器Q-2的流量过大</td>
+                        <td><span class="risk-medium">中</span></td>
+                        <td>监测/报警</td>
+                        <td>增设流量监测与报警</td>
+                    </tr>
+                    <tr>
+                        <td>3-3</td>
+                        <td>旋流分离器出水逆流回预处理器Q-3</td>
+                        <td><span class="risk-medium">中</span></td>
+                        <td>维护检查</td>
+                        <td>加强止回阀检查</td>
+                    </tr>
+                    <tr>
+                        <td>3-4</td>
+                        <td>旋流分离器Q-2分离效果不佳</td>
+                        <td><span class="risk-medium">中</span></td>
+                        <td>监测/报警</td>
+                        <td>增设在线水质监测</td>
+                    </tr>
+                    <tr>
+                        <td>13</td>
+                        <td>G-1负压</td>
+                        <td><span class="risk-high">高</span></td>
+                        <td>联锁保护</td>
+                        <td>强化负压联锁保护</td>
+                    </tr>
+                    <tr>
+                        <td>14</td>
+                        <td>来水会有大量原油或固体</td>
+                        <td><span class="risk-low">低</span></td>
+                        <td>沟通机制</td>
+                        <td>建立上下游沟通机制</td>
+                    </tr>
+                    <tr>
+                        <td>21</td>
+                        <td>调储罐G-1与预处理器Q-3间管道内流量过大</td>
+                        <td><span class="risk-medium">中</span></td>
+                        <td>联锁控制</td>
+                        <td>增设高流量联锁</td>
+                    </tr>
+                    <tr>
+                        <td>24</td>
+                        <td>泵B-1出口压力过高</td>
+                        <td><span class="risk-medium">中</span></td>
+                        <td>操作规程</td>
+                        <td>优化操作规程</td>
+                    </tr>
+                    <tr>
+                        <td>25</td>
+                        <td>调储罐G-1出水水质异常</td>
+                        <td><span class="risk-medium">中</span></td>
+                        <td>水质监测</td>
+                        <td>加强水质监控</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="card">
+            <h2 class="card-title">分析结论与建议</h2>
+            <div style="padding: 10px 0;">
+                <h3 style="color: #2c3e50; margin-bottom: 15px;">主要发现：</h3>
+                <ul style="list-style-type: none; margin-left: 10px;">
+                    <li style="margin-bottom: 10px; padding-left: 20px; position: relative;">
+                        <span style="position: absolute; left: 0; color: #FF6B6B;">•</span>
+                        <strong>高风险项（1项）：</strong>G-1负压问题需要立即处理，建议强化负压联锁保护
+                    </li>
+                    <li style="margin-bottom: 10px; padding-left: 20px; position: relative;">
+                        <span style="position: absolute; left: 0; color: #FFD166;">•</span>
+                        <strong>中风险项（11项）：</strong>主要集中在流量控制、设备故障等方面，建议加强监测和联锁控制
+                    </li>
+                    <li style="margin-bottom: 10px; padding-left: 20px; position: relative;">
+                        <span style="position: absolute; left: 0; color: #06D6A0;">•</span>
+                        <strong>低风险项（2项）：</strong>沟通机制和常规监测可有效控制风险
+                    </li>
+                </ul>
+                
+                <h3 style="color: #2c3e50; margin: 20px 0 15px 0;">优先处理建议：</h3>
+                <ol style="margin-left: 20px;">
+                    <li style="margin-bottom: 8px;">立即处理G-1负压高风险问题</li>
+                    <li style="margin-bottom: 8px;">在关键节点增设流量监测与报警系统（7项建议）</li>
+                    <li style="margin-bottom: 8px;">实施联锁控制措施（4项建议）</li>
+                    <li style="margin-bottom: 8px;">加强设备维护检查（3项建议）</li>
+                </ol>
+            </div>
+        </div>
+        
+        <footer>
+            <p>采油一厂尕斯联合站安全评估项目 | HAZOP分析结果可视化</p>
+            <p>数据来源：现场调研与HAZOP分析 | 生成时间：2024年</p>
+        </footer>
+    </div>
+    
+    <script>
+        // 初始化所有图表
+        document.addEventListener('DOMContentLoaded', function() {
+            // 1. 风险等级饼图
+            const riskPieCtx = document.getElementById('riskPieChart').getContext('2d');
+            new Chart(riskPieCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['高风险', '中风险', '低风险'],
+                    datasets: [{
+                        data: [1, 11, 2],
+                        backgroundColor: ['#FF6B6B', '#FFD166', '#06D6A0'],
+                        borderColor: ['#fff', '#fff', '#fff'],
+                        borderWidth: 2,
+                        hoverOffset: 15
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                font: {
+                                    size: 13
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((value / total) * 100);
+                                    return `${label}: ${value}个 (${percentage}%)`;
+                                }
+                            }
+                        },
+                        datalabels: {
+                            color: '#fff',
+                            font: {
+                                weight: 'bold',
+                                size: 14
+                            },
+                            formatter: (value, ctx) => {
+                                const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `${percentage}%`;
+                            }
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+            
+            // 2. 建议措施柱状图
+            const suggestionBarCtx = document.getElementById('suggestionBarChart').getContext('2d');
+            new Chart(suggestionBarCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['监测/报警', '联锁控制', '维护检查', '操作规程', '水质监测', '沟通机制', '联锁保护'],
+                    datasets: [{
+                        label: '建议措施数量',
+                        data: [7, 4, 3, 1, 1, 1, 1],
+                        backgroundColor: [
+                            '#3498db', '#2ecc71', '#f39c12', '#9b59b6', 
+                            '#1abc9c', '#e74c3c', '#34495e'
+                        ],
+                        borderColor: '#fff',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '数量',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            ticks: {
+                                stepSize: 1
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: '措施类型',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            ticks: {
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw}项`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 3. 风险矩阵热力图
+            const riskMatrixCtx = document.getElementById('riskMatrixChart').getContext('2d');
+            new Chart(riskMatrixCtx, {
+                type: 'matrix',
+                data: {
+                    datasets: [{
+                        label: '风险矩阵',
+                        data: [
+                            {x: '低', y: '低', v: 2},
+                            {x: '中', y: '中', v: 11},
+                            {x: '高', y: '高', v: 1}
+                        ],
+                        backgroundColor: function(context) {
+                            const value = context.dataset.data[context.dataIndex].v;
+                            const maxValue = 11;
+                            const alpha = value / maxValue;
+                            return `rgba(231, 76, 60, ${alpha})`;
+                        },
+                        borderColor: '#fff',
+                        borderWidth: 2,
+                        width: ({chart}) => (chart.chartArea || {}).width / 3 - 10,
+                        height: ({chart}) => (chart.chartArea || {}).height / 3 - 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'category',
+                            labels: ['低', '中', '高'],
+                            offset: true,
+                            title: {
+                                display: true,
+                                text: '严重性',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        y: {
+                            type: 'category',
+                            labels: ['低', '中', '高'],
+                            offset: true,
+                            title: {
+                                display: true,
+                                text: '可能性',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                title: function() {
+                                    return '风险矩阵';
+                                },
+                                label: function(context) {
+                                    const data = context.dataset.data[context.dataIndex];
+                                    return `可能性: ${data.y}, 严重性: ${data.x}, 节点数: ${data.v}`;
+                                }
+                            }
+                        },
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+            
+            // 4. 风险堆叠柱状图
+            const riskStackedCtx = document.getElementById('riskStackedChart').getContext('2d');
+            new Chart(riskStackedCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['监测/报警', '联锁控制', '维护检查', '其他措施'],
+                    datasets: [
+                        {
+                            label: '高风险',
+                            data: [0, 0, 0, 1],
+                            backgroundColor: '#FF6B6B',
+                            borderColor: '#fff',
+                            borderWidth: 1
+                        },
+                        {
+                            label: '中风险',
+                            data: [4, 3, 2, 2],
+                            backgroundColor: '#FFD166',
+                            borderColor: '#fff',
+                            borderWidth: 1
+                        },
+                        {
+                            label: '低风险',
+                            data: [1, 0, 0, 1],
+                            backgroundColor: '#06D6A0',
+                            borderColor: '#fff',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            stacked: true,
+                            title: {
+                                display: true,
+                                text: '措施类型',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '节点数量',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
